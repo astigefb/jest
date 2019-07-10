@@ -11,12 +11,22 @@ import isRegExpSupported from '../isRegExpSupported';
 const COMMENT_NO_NEG_LB = isRegExpSupported('(?<!\\.\\s*)') ? '' : '//';
 
 describe('dependencyExtractor', () => {
+  // https://github.com/facebook/jest/issues/8547
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#Import_a_module_for_its_side_effects_only
+  it('should extract dependencies from side-effect only imports', () => {
+      const code = `
+        import './side-effect-dep';
+      `;
+      expect(extract(code)).toEqual(new Set(['./side-effect-dep']));
+  });
+
   it('should not extract dependencies inside comments', () => {
     const code = `
       // import a from 'ignore-line-comment';
       // require('ignore-line-comment');
       /*
        * import a from 'ignore-block-comment';
+       * import './ignore-block-comment';
        * require('ignore-block-comment');
        */
     `;
