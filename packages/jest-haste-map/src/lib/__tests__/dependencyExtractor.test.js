@@ -11,15 +11,6 @@ import isRegExpSupported from '../isRegExpSupported';
 const COMMENT_NO_NEG_LB = isRegExpSupported('(?<!\\.\\s*)') ? '' : '//';
 
 describe('dependencyExtractor', () => {
-  // https://github.com/facebook/jest/issues/8547
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#Import_a_module_for_its_side_effects_only
-  it('should extract dependencies from side-effect only imports', () => {
-      const code = `
-        import './side-effect-dep';
-      `;
-      expect(extract(code)).toEqual(new Set(['./side-effect-dep']));
-  });
-
   it('should not extract dependencies inside comments', () => {
     const code = `
       // import a from 'ignore-line-comment';
@@ -75,6 +66,21 @@ describe('dependencyExtractor', () => {
       ${COMMENT_NO_NEG_LB} foo . export ('inv2');
     `;
     expect(extract(code)).toEqual(new Set(['dep1', 'dep2', 'dep3', 'dep4']));
+  });
+
+  // https://github.com/facebook/jest/issues/8547
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#Import_a_module_for_its_side_effects_only
+  it('should extract dependencies from side-effect only `import` statements', () => {
+      const code = `
+        // Good
+        import './side-effect-dep1';
+        import 'side-effect-dep2';
+
+        // Bad
+        import ./inv1;
+        import inv2
+      `;
+      expect(extract(code)).toEqual(new Set(['./side-effect-dep1', 'side-effect-dep2']))
   });
 
   it('should not extract dependencies from `import type/typeof` statements', () => {
